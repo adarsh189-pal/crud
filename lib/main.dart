@@ -49,7 +49,6 @@ class _MyAppPageState extends State<MyAppPage> {
   }
 
   createData() {
-    print('created');
     DocumentReference documentReference =
         FirebaseFirestore.instance.collection('MyStudent').doc(studentName);
     Map<String, dynamic> students = {
@@ -64,15 +63,38 @@ class _MyAppPageState extends State<MyAppPage> {
   }
 
   readData() {
-    print('read');
+    DocumentReference documentReference =
+        FirebaseFirestore.instance.collection('MyStudent').doc(studentName);
+
+    documentReference.get().then((datasnapshot) {
+      print(datasnapshot.data()['studentName']);
+      print(datasnapshot.data()['studentId']);
+      print(datasnapshot.data()['studyProgramId']);
+      print(datasnapshot.data()['studentGpa']);
+    });
   }
 
   updateData() {
-    print('updated');
+    DocumentReference documentReference =
+        FirebaseFirestore.instance.collection('MyStudent').doc(studentName);
+    Map<String, dynamic> students = {
+      'studentName': studentName,
+      'studentId': systemId,
+      'studyProgramId': studyProgramId,
+      'studentGpa': studentGpa
+    };
+    documentReference.set(students).whenComplete(() {
+      print('$studentName updated');
+    });
   }
 
   deleteData() {
-    print('deleted');
+    DocumentReference documentReference =
+        FirebaseFirestore.instance.collection('MyStudent').doc(studentName);
+
+    documentReference.delete().whenComplete(() {
+      print('$studentName deleted');
+    });
   }
 
   @override
@@ -102,7 +124,7 @@ class _MyAppPageState extends State<MyAppPage> {
               padding: const EdgeInsets.all(16.0),
               child: TextFormField(
                 decoration: InputDecoration(
-                    labelText: 'System ID',
+                    labelText: 'Student ID',
                     fillColor: Colors.white,
                     focusedBorder: OutlineInputBorder(
                       borderSide: BorderSide(color: Colors.blue, width: 2),
@@ -184,6 +206,65 @@ class _MyAppPageState extends State<MyAppPage> {
                   },
                 ),
               ],
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                textDirection: TextDirection.ltr,
+                children: [
+                  Expanded(
+                    child: Text('Name'),
+                  ),
+                  Expanded(
+                    child: Text('Student Id'),
+                  ),
+                  Expanded(
+                    child: Text('Study Program Id'),
+                  ),
+                  Expanded(
+                    child: Text('Student GPA'),
+                  ),
+                ],
+              ),
+            ),
+            StreamBuilder(
+              stream: FirebaseFirestore.instance
+                  .collection('MyStudent')
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  return ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: snapshot.data.docs.length,
+                      itemBuilder: (context, index) {
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: Text(snapshot.data.docs[index]
+                                  .data()['studentName']),
+                            ),
+                            Expanded(
+                                child: Text(snapshot.data.docs[index]
+                                    .data()['studentId'])),
+                            Expanded(
+                              child: Text(snapshot.data.docs[index]
+                                  .data()['studyProgramId']),
+                            ),
+                            Expanded(
+                              child: Text(snapshot.data.docs[index]
+                                  .data()['studentGpa']
+                                  .toString()),
+                            ),
+                          ],
+                        );
+                      });
+                } else {
+                  return Align(
+                    alignment: FractionalOffset.bottomCenter,
+                    child: CircularProgressIndicator(),
+                  );
+                }
+              },
             )
           ],
         ),
